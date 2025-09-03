@@ -1,6 +1,7 @@
 using RegistroJugadores.Components;
 using RegistroJugadores.DAL;
 using Microsoft.EntityFrameworkCore;
+using RegistroJugadores.Services;
 
 namespace RegistroJugadores
 {
@@ -19,6 +20,9 @@ namespace RegistroJugadores
 
             //Agregamos el contexto al builder con el ConStr
             builder.Services.AddDbContextFactory<Contexto>(Options => Options.UseSqlite(ConStr));
+
+            //Injeccion del service
+            builder.Services.AddScoped<JugadoresService>();
 
             var app = builder.Build();
 
