@@ -15,7 +15,7 @@ namespace RegistroJugadores
                 .AddInteractiveServerComponents();
 
             //Obtenemos el ConStr para usarlo en el contexto
-            var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
+            var ConStr = builder.Configuration.GetConnectionString("ConStr");
 
             //Agregamos el contexto al builder con el ConStr
             builder.Services.AddDbContextFactory<Contexto>(Options => Options.UseSqlite(ConStr));
