@@ -1,4 +1,6 @@
 using RegistroJugadores.Components;
+using RegistroJugadores.DAL;
+using Microsoft.EntityFrameworkCore;
 
 namespace RegistroJugadores
 {
@@ -11,6 +13,12 @@ namespace RegistroJugadores
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            //Obtenemos el ConStr para usarlo en el contexto
+            var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
+
+            //Agregamos el contexto al builder con el ConStr
+            builder.Services.AddDbContextFactory<Contexto>(Options => Options.UseSqlite(ConStr));
 
             var app = builder.Build();
 
