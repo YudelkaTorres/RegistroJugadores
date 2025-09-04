@@ -24,6 +24,9 @@ namespace RegistroJugadores
             //Injeccion del service
             builder.Services.AddScoped<JugadoresService>();
 
+            //Injeccion del servicio de Bootstrap
+            builder.Services.AddBootstrapBlazor();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
