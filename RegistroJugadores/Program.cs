@@ -2,6 +2,7 @@ using RegistroJugadores.Components;
 using RegistroJugadores.DAL;
 using Microsoft.EntityFrameworkCore;
 using RegistroJugadores.Services;
+using BootstrapBlazor.Components;
 
 namespace RegistroJugadores
 {
@@ -26,6 +27,7 @@ namespace RegistroJugadores
 
             //Injeccion del servicio de Bootstrap
             builder.Services.AddBootstrapBlazor();
+            builder.Services.AddScoped<ToastService>();
 
             var app = builder.Build();
 
