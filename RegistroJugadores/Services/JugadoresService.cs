@@ -64,7 +64,7 @@ namespace RegistroJugadores.Services
             return modificado;
         }
 
-        private async Task<Jugadores?> BuscarId(int jugadorId)
+        public async Task<Jugadores?> BuscarId(int jugadorId)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto.Jugadores
