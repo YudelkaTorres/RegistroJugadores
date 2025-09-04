@@ -80,7 +80,7 @@ namespace RegistroJugadores.Services
                 .FirstOrDefaultAsync(j => j.Nombres.ToLower() == nombre.ToLower());
         }
 
-        private async Task<bool> Eliminar(int jugadorId)
+        public async Task<bool> Eliminar(int jugadorId)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto .Jugadores
