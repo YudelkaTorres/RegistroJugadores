@@ -40,7 +40,7 @@ namespace RegistroJugadores.Services
                 .AnyAsync(j => j.JugadorId == jugadorId);
         }
 
-        private async Task<bool> ExisteNombre(int jugadorId, string nombre)
+        public async Task<bool> ExisteNombre(int jugadorId, string nombre)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto.Jugadores
