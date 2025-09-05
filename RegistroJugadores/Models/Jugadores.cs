@@ -1,12 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace RegistroJugadores.Models
 {
+    [Index(nameof(Nombres), IsUnique = true)]
     public class Jugadores
     {
         [Key]
         public int JugadorId { get; set; }
 
+        [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "No se permiten caracteres especiales")]
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         public string Nombres { get; set; } = string.Empty;
 
