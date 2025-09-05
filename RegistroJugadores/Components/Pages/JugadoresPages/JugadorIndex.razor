@@ -2,14 +2,16 @@
 
 @inject JugadoresService jugadoresService
 @inject NavigationManager Navigation
+@rendermode InteractiveServer
 
-<PageTitle>Registro de Jugadores</PageTitle>
-<div class="container">
+<PageTitle>Index de Jugadores</PageTitle>
+<div class="card">
     <div class="card shadow-lg">
         @*Header*@
-        <div class="card-header space-between">
-            <h5 class="card-title">Registro de Jugadores</h5>
-            <a href="/Jugador/Create" class=" btn btn-primary"><span class="bi bi-plus-square mt-3"></span> Crear</a>
+        <div class="card-header text-center">
+            <div class="bg-secondary rounded text-white">
+                <h5 class="card-title">Index de Jugadores</h5>
+            </div>
         </div>
         @*Body*@
         <div class="card-body">
@@ -37,45 +39,57 @@
                     <div class="col-4">
                         <div class="input-group">
                             <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
-                            <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                            <button type="button" class="btn btn-outline-primary" @onclick="Buscar"> 
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"> Restablecer</button>
+                    <div class="col-md-4 text-end mt-4 mt-md-0">
+                        <a href="/Jugador/Create" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-1"></i> Crear
+                        </a>
                     </div>
                 </div>
            
                 @*Tabla*@
-                <table class="table table-hover mt-3">
-                    <thead class="table table-striped text-black">
-                        <tr>
-                            <th>JugadorId</th>
-                            <th>Nombres</th>
-                            <th>Partidas</th>
-                            <th>Opciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var jugador in ListaJugadores)
-                        {
+                <div class="text-center mt-3">
+                    <table class="table table-bordered">
+                        <thead>
                             <tr>
-                                <td>@jugador.JugadorId</td>
-                                <td>@jugador.Nombres</td>
-                                <td>@jugador.Partidas</td>
-
-                                <td class="text-center">
-                                    <a href="/Jugador/Edit/@jugador.JugadorId" class="btn btn-outline-primary bi bi-pencil-square"></a>
-                                    <button type="button" class="btn btn-outline-danger bi bi-trash2" @onclick="()=> Eliminar(jugador.JugadorId)"></button>
-                                    <button trype="button" class="btn btn-outline-warning bi bi-pencil-square" @onclick="()=> Editar(jugador.JugadorId)"></button>
-                                </td>
+                                <th>JugadorId</th>
+                                <th>Nombres</th>
+                                <th>Partidas</th>
+                                <th>Editar</th>
+                                <th>Eliminar</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach(var jugador in ListaJugadores)
+                            {
+                                <tr>
+                                    <td>@jugador.JugadorId</td>
+                                    <td>@jugador.Nombres</td>
+                                    <td>@jugador.Partidas</td>
+                                    <td>
+                                        <a href="/Jugador/Edit/@jugador.JugadorId" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    
+                                     </td>
+                                     <td>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmarEliminar (jugador.JugadorId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
             @*Footer*@
             <div class="card-footer">
-                <label>Total de Jugadores: @ListaJugadores.Count()</label>
+                <p>Total de Jugadores: @ListaJugadores.Count()</p>
             </div>
         </div>
     </div>
@@ -86,6 +100,7 @@
 
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
+    [Inject] public IJSRuntime JS { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,16 +126,21 @@
         }
     }
 
-    private async Task Restablecer()
+    public void Crear()
     {
-        ListaJugadores = await jugadoresService.Listar(j => j.JugadorId > 0);
-        Filtro = string.Empty;
-        ValorFiltro = string.Empty;
+        Navigation.NavigateTo("/Jugador/Crate/");
     }
 
-    public void Eliminar(int jugadorId)
+    private async Task ConfirmarEliminar(int jugadorId)
     {
-        Navigation.NavigateTo($"/Jugador/Delete/{jugadorId}");
+        bool confirmado = await JS.InvokeAsync<bool>("confirm",
+        $"¿Estás seguro que deseas eliminar al jugador con ID {jugadorId}?");
+
+        if (confirmado)
+        {
+            await jugadoresService.Eliminar(jugadorId);
+            ListaJugadores = await jugadoresService.Listar(j => j.JugadorId > 0);
+        }
     }
 
     public void Editar(int jugadorId)

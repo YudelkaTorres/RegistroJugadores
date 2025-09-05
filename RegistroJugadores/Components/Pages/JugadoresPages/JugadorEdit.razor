@@ -1,102 +1,124 @@
 ﻿@page "/Jugador/Edit/{JugadorId:int}"
-
-@inject JugadoresService jugadoresService
-@inject NavigationManager Navigation
+@using RegistroJugadores.Models
+@using RegistroJugadores.Services
+@using System.ComponentModel.DataAnnotations
 @inject ToastService toastService
+@inject JugadoresService JugadoresService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
-@*HTML*@
-<PageTitle>Modificar</PageTitle>
-<EditForm Model="Jugador" OnValidSubmit="Modificar">
-    <DataAnnotationsValidator />
-    <ValidationSummary/>
+<PageTitle>Editar Jugador</PageTitle>
 
-    <div class="container">
-        <div class="card shadow-lg">
-            <div class="card-header text-center">
-                <h5 class="card-title">Modificar Jugador</h5>
-            </div>
-            @*Body*@
-            <div class="card-body">
-              @*JugadorId*@
-              <div class="mb-3">
-                    <label class="form-label"><strong>JugadorId</strong></label>
-                    <InputNumber class=" form-control" @bind-Value="Jugador.JugadorId" readonly />
-                </div>
-              @*Nombres*@
-               <div class="mb-3">
-                    <label class="col-form-label"><strong>Nombres</strong></label>
-                    <InputText class="form-control" @bind-Value="Jugador.Nombres"></InputText>
-                    <ValidationMessage For="(() => Jugador.Nombres)" />
-                </div>
-               @*Partidas*@
-                <div class="mb-3">
-                    <label class="col-form-label"><strong>Partidas</strong></label>
-                    <InputNumber class="form-control" @bind-Value="Jugador.Partidas"></InputNumber>
-                    <ValidationMessage For="(() => Jugador.Partidas)" />
-                </div>
-            </div>
-            @*Footer*@
-            <div class="card-footer text-center mt-2">
-                <a href="/Jugador/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span>Volver</a>
-                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
-            </div>
-        </div>
-    </div>
-</EditForm>
+@if (Jugadores != null)
+{
+	<div class="container mt-4">
+		<div class="card shadow-sm">
+			<div class="card-header bd-white text-center">
+				<h5 class="mb-0">Editar jugador</h5>
+			</div>
+			<div class="card-body">
+				<EditForm Model="Jugadores" OnValidSubmit="GuardarCambios">
+					<DataAnnotationsValidator />
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="nombre" class="form-label fw-bold">Nombre:</label>
+							<InputText id="nombre" class="form-control" @bind-Value="Jugadores.Nombres" />
+							<ValidationMessage For="() => Jugadores.Nombres" />
+						</div>
+						<div class="col-md-6 mb-3">
+							<label for="Partidas" class="form-label fw-bold">Partidas</label>
+							<InputNumber id="Partidas" class="form-control" @bind-Value="Jugadores.Partidas" />
+							<ValidationMessage For="() => Jugadores.Partidas" />
+						</div>
+					</div>
+					<div class="d-flex justify-content-end gap-2 mt-3">
+						<button type="submit" class="btn btn-primary">
+							<i class="bi bi-save me-1"></i> Guardar
+						</button>
+						<a href="/Jugador/Index" class="btn btn-secondary">
+							<i class="bi bi-arrow-left-circle me-1"></i> Cancelar
+						</a>
+						<button type="button" class="btn btn-danger" @onclick="() => MostrarModalEliminar = true">
+							<i class="bi bi-trash me-1"></i> Eliminar
+						</button>
+					</div>
+				</EditForm>
+			</div>
+		</div>
+	</div>
+}
+else
+{
+	<div class="text-center mt-5">
+		<p class="lead text-muted">Cargando datos de los jugadores</p>
+	</div>
+}
 
+@if (MostrarModalEliminar)
+{
+	<div class="modal d-block" tabindex="-1" role="dialog" style="background-color:rgba(0,0,0,0.5);">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Confirmar eliminación</h5>
+					<button type="button" class="btn-close" @onclick="() => MostrarModalEliminar = false"></button>
+				</div>
+				<div class="modal-body">
+					<p>¿Estás seguro de que deseas eliminar este jugador?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">Cancelar</button>
+					<button type="button" class="btn btn-danger" @onclick="ConfirmarEliminación">Eliminar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
 @code {
-    [Parameter]
-    public int JugadorId { get; set; }
-    public Jugadores Jugador { get; set; } = new Jugadores();
+	[Parameter]
+	public int JugadorId { get; set; }
+	public Jugadores? Jugadores { get; set; }
+	private bool MostrarModalEliminar { get; set; } = false;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var Jugador = await jugadoresService.BuscarId(JugadorId);
-    }
-
-    public async Task Modificar()
-    {
-        if (await Validar())
-        {
-            await toastService.Warning("Ya existe un jugador con ese nombre");
-            return;
-        }
-        var modificado = await jugadoresService.Guardar(Jugador);
-
-        if (modificado)
-        {
-            await toastService.Success($"El jugador {Jugador.Nombres} se ha modificado correctamente");
-            Navigation.NavigateTo("/Jugador/Index");
-        }
-        else
-        {
-            await toastService.Error("No se ha podido modificar correctamente");
-        }
-    }
-
-    public async Task<bool> Validar()
-    {
-        var existe = await jugadoresService.ExisteNombre(Jugador.JugadorId, Jugador.Nombres);
-        return existe;
-    }
-
-    private async Task Eliminar()
-    {
-        var eliminado = await jugadoresService.Eliminar(Jugador.JugadorId);
-
-        if (eliminado)
-        {
-            await toastService.Success($"El jugador {Jugador.Nombres} se ha eliminado correctamente");
-            Navigation.NavigateTo("/Jugador/Index");
-        }
-        else
-        {
-            await toastService.Error("No se ha podido eliminar correctamente");
-        }
-    }
-
-    public void Volver()
-    {
-        Navigation.NavigateTo("/Jugador/Index");
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		Jugadores = await JugadoresService.BuscarId(JugadorId);
+	}
+	private async Task GuardarCambios()
+	{
+		if (Jugadores != null)
+		{
+			try
+			{
+				if (await JugadoresService.Guardar(Jugadores))
+				{
+					await toastService.Success($"El jugador {Jugadores.Nombres} se ha guardado correctamente.");
+					NavigationManager.NavigateTo("/Jugador/Index");
+				}
+			}
+			catch (InvalidOperationException ex)
+			{
+				await toastService.Warning(ex.Message);
+			}
+			catch (ArgumentException ex)
+			{
+				await toastService.Warning(ex.Message);
+			}
+			catch (Exception)
+			{
+				await toastService.Error("Ocurrió un error inesperado al guardar el jugador.");
+			}
+		}
+	}
+	private async Task ConfirmarEliminación()
+	{
+		if (Jugadores != null)
+		{
+			if (await JugadoresService.Eliminar(Jugadores.JugadorId))
+			{
+				MostrarModalEliminar = false;
+				NavigationManager.NavigateTo("/Jugador/Index");
+			}
+		}
+	}
 }

@@ -44,9 +44,9 @@ namespace RegistroJugadores.Services
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto.Jugadores
-                .AnyAsync(j => j.JugadorId != jugadorId
-                && j.Nombres.ToLower().Equals(nombre.ToLower()));
-        }
+				.AnyAsync(j => j.Nombres.ToLower() == nombre.ToLower()
+							   && j.JugadorId != jugadorId);
+		}
 
         private async Task<bool> Insertar(Jugadores jugador)
         {
@@ -72,7 +72,7 @@ namespace RegistroJugadores.Services
                 .FirstOrDefaultAsync(j => j.JugadorId == jugadorId);
         }
 
-        private async Task<Jugadores?> BuscarNombre(string nombre)
+        public async Task<Jugadores?> BuscarNombre(string nombre)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto.Jugadores
