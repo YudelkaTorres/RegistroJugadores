@@ -19,6 +19,10 @@
 			<div class="card-body">
 				<EditForm Model="Jugadores" OnValidSubmit="GuardarCambios">
 					<DataAnnotationsValidator />
+					@if (!string.IsNullOrWhiteSpace(Mensaje))
+					{
+						<div class="alert alert-danger mt-2">@Mensaje</div>
+					}
 					<div class="row">
 						<div class="col-md-6 mb-3">
 							<label for="nombre" class="form-label fw-bold">Nombre:</label>
@@ -64,8 +68,14 @@ else
 					<button type="button" class="btn-close" @onclick="() => MostrarModalEliminar = false"></button>
 				</div>
 				<div class="modal-body">
-					<p>¿Estás seguro de que deseas eliminar este jugador?</p>
+					<p class="fw-bold text-danger">¿Estás seguro de que deseas eliminar este jugador?</p>
+					<ul class="list-group">
+						<li class="list-group-item"><strong>JugadorId:</strong> @Jugadores?.JugadorId</li>
+						<li class="list-group-item"><strong>Nombre:</strong> @Jugadores?.Nombres</li>
+						<li class="list-group-item"><strong>Partidas:</strong> @Jugadores?.Partidas</li>
+					</ul>
 				</div>
+
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" @onclick="() => MostrarModalEliminar = false">Cancelar</button>
 					<button type="button" class="btn btn-danger" @onclick="ConfirmarEliminación">Eliminar</button>
@@ -77,6 +87,7 @@ else
 @code {
 	[Parameter]
 	public int JugadorId { get; set; }
+	public string Mensaje { get; set; } = string.Empty;
 	public Jugadores? Jugadores { get; set; }
 	private bool MostrarModalEliminar { get; set; } = false;
 
@@ -88,25 +99,14 @@ else
 	{
 		if (Jugadores != null)
 		{
-			try
+			if (await JugadoresService.ExisteNombre(Jugadores.Nombres, Jugadores.JugadorId))
 			{
-				if (await JugadoresService.Guardar(Jugadores))
-				{
-					await toastService.Success($"El jugador {Jugadores.Nombres} se ha guardado correctamente.");
-					NavigationManager.NavigateTo("/Jugador/Index");
-				}
+				Mensaje = " No se pueden agregar dos personas con el mismo nombre.";
+				return;
 			}
-			catch (InvalidOperationException ex)
+			if (await JugadoresService.Guardar(Jugadores))
 			{
-				await toastService.Warning(ex.Message);
-			}
-			catch (ArgumentException ex)
-			{
-				await toastService.Warning(ex.Message);
-			}
-			catch (Exception)
-			{
-				await toastService.Error("Ocurrió un error inesperado al guardar el jugador.");
+				NavigationManager.NavigateTo("/Jugador/Index");
 			}
 		}
 	}

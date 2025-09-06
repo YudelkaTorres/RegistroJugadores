@@ -1,84 +1,76 @@
 ﻿@page "/Jugador/Create"
-@inject JugadoresService jugadoresService
-@inject NavigationManager Navigation
-@inject ToastService toastService
+@using RegistroJugadores.Models
+@using RegistroJugadores.Services
+@inject JugadoresService JugadoresService
+@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-@*HTML*@
-<PageTitle>Crear Jugador</PageTitle>
-<EditForm Model="Jugador" OnValidSubmit="Guardar">
-    <DataAnnotationsValidator/>
+<PageTitle>Index de Jugadores</PageTitle>
 
-   <div class="card">
-        <div class="shadow-lg">
-            @*Header*@
-            <div class=" card-header text-center">
-                <div class="bg-secondary rounded text-white">
-                    <h3 class="card-title">Crear un nuevo Jugador</h3>
-                </div>
-            </div>
-            @*Body*@
-            <div class="card-body">
-                <div class="row">
-                    @*JugadorId*@
-                    <div class="mb-3">
-                        <label class="form-label"><strong>JugadorId</strong></label>
-                        <InputNumber class=" form-control" @bind-Value="Jugador.JugadorId" readonly />
-                    </div>
-                    @*Nombres*@
-                    <div class="mb-3">
-                        <label class="col-form-label"><strong>Nombres</strong></label>
-                        <InputText class="form-control" @bind-Value="Jugador.Nombres"></InputText>
-                        <ValidationMessage For="(() => Jugador.Nombres)" />
-                    </div>
-                    @*Partidas*@
-                    <div class="mb-3">
-                        <label class="col-form-label"><strong>Partidas</strong></label>
-                        <InputNumber class="form-control" @bind-Value="Jugador.Partidas"></InputNumber>
-                        <ValidationMessage For="(() => Jugador.Partidas)"/>
-                    </div>
-                </div>
-            </div>
-            @*Footer*@
-            <div class="card-footer">
-                <div class="text-center">
-                    <a href="/Jugador/Index" class="btn btn-secondary"><span class="bi bi-arrow-left"></span>Volver</a>
-                    <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
-                </div>
-            </div>
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bd-white text-center">
+            <h5 class="mb-0">Crear un nuevo jugador</h5>
         </div>
-   </div>
-</EditForm>
+        <div class="card-body">
+            <EditForm Model="Jugadores" OnValidSubmit="Guardar">
+                <DataAnnotationsValidator />
+                <div class="row">
+                    @* JugadorId*@
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">JugadorId:</label>
+                        <InputNumber class="form-control" @bind-Value="Jugadores.JugadorId" readonly />
+                    </div>
+
+                    @*Nombres*@
+                    <div class="col-md-6 mb-3">
+                        <label for="Nombre" class="form-label fw-bold">Nombre:</label>
+                        <InputText id="nombre" class="form-control" @bind-Value="Jugadores.Nombres" />
+                        <ValidationMessage For="() => Jugadores.Nombres" />
+                    </div>
+
+                    @*Partidas*@
+                    <div class="col-md-6 mb-3">
+                        <label for="Partidas" class="form-label fw-bold">Partidas</label>
+                        <InputNumber id="Partidas" class="form-control" @bind-Value="Jugadores.Partidas" />
+                        <ValidationMessage For="() => Jugadores.Partidas" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                    <a href="/Jugador/Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle me-1"></i> Volver
+                    </a>
+                </div>
+            </EditForm>
+
+            @if (!string.IsNullOrWhiteSpace(Mensaje))
+            {
+                <div class="alert alert-warning mt-2">@Mensaje</div>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
-    public Jugadores Jugador { get; set; } = new Jugadores();
-    
-    public async Task Guardar()
+    public Jugadores Jugadores { get; set; } = new();
+    public string Mensaje { get; set; } = string.Empty;
+
+    private async Task Guardar()
     {
-        if (await Validar())
+        if (await JugadoresService.ExisteNombre(Jugadores.Nombres))
         {
-            await toastService.Warning("Ya existe un jugador con ese nombre.");
+            Mensaje = "Ya existe un jugador con este nombre.";
             return;
         }
-
-        var creado = await jugadoresService.Guardar(Jugador);
-        if (creado)
+        if (await JugadoresService.Guardar(Jugadores))
         {
-            await toastService.Success($"El jugador {Jugador.Nombres} se ha creado correctamente");
-            Navigation.NavigateTo("/Jugador/Index");
+            NavigationManager.NavigateTo("/Jugador/Index");
         }
-        else
-           await toastService.Error("No se ha pudo guardar correctamente");
-    }
 
-    public async Task<bool> Validar()
-    {
-        var existe = await jugadoresService.ExisteNombre(Jugador.JugadorId, Jugador.Nombres);
-        return existe;
-    }
 
-    public void Volver()
-    {
-        Navigation.NavigateTo("/Jugador/Index");
     }
 }

@@ -2,94 +2,112 @@
 
 @inject JugadoresService jugadoresService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <PageTitle>Index de Jugadores</PageTitle>
-<div class="card">
-    <div class="card shadow-lg">
-        @*Header*@
-        <div class="card-header text-center">
-            <div class="bg-secondary rounded text-white">
-                <h5 class="card-title">Index de Jugadores</h5>
+
+<div class="card shadow-lg mt-4">
+    <div class="card-header bg-white text-center ">
+        <h5 class="card-title">Index de Jugadores</h5>
+    </div>
+
+    <div class="card-body">
+        @* Filtros *@
+        <div class="row mb-3 align-items-center">
+            <div class="col-3">
+                <label class="form-label"><strong>Filtrar por:</strong></label>
+                <InputSelect class="form-select" @bind-Value="Filtro">
+                    <option value="" selected disabled>Elija una opción</option>
+                    <option value="JugadorId">JugadorId</option>
+                    <option value="Nombres">Nombres</option>
+                </InputSelect>
+            </div>
+            <div class="col-4">
+                <label class="form-label"><strong>Búsqueda:</strong></label>
+                <div class="input-group">
+                    <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                    <button type="button" class="btn btn-primary" @onclick="Buscar">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 text-end mt-4 mt-md-0">
+                <a href="/Jugador/Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i> Crear
+                </a>
             </div>
         </div>
-        @*Body*@
-        <div class="card-body">
-            @*Labels*@
-            <div class="row">
-                @*Filtar por*@
-                <div class="col-3">
-                    <label class="form-label" for="Filtro"><strong>Filtrar por</strong></label>
-                </div>
-                @*ValorFiltro*@
-                <div class="col-4">
-                    <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
-                </div>
-                @*Inputs y Buttons*@
-                <div class="row align-items-center">
-                    @*Filtro*@
-                    <div class="col-3">
-                        <InputSelect class="form-select" @bind-Value="Filtro">
-                            <option value="" selected disabled>Elija una opci&oacute;n</option>
-                            <option value="JugadorId">JugadorId</option>
-                            <option value="Nombres">Nombres</option>
-                        </InputSelect>
-                    </div>
-                @*Búsqueda*@
-                    <div class="col-4">
-                        <div class="input-group">
-                            <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
-                            <button type="button" class="btn btn-outline-primary" @onclick="Buscar"> 
-                                <i class="bi bi-search"></i> Buscar
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-end mt-4 mt-md-0">
-                        <a href="/Jugador/Create" class="btn btn-success">
-                            <i class="bi bi-plus-circle me-1"></i> Crear
-                        </a>
-                    </div>
-                </div>
-           
-                @*Tabla*@
-                <div class="text-center mt-3">
-                    <table class="table table-bordered">
-                        <thead>
+
+        @* Tabla de jugadores *@
+        <div class="table-responsive">
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>JugadorId</th>
+                        <th>Nombres</th>
+                        <th>Partidas</th>
+                        <th>Editar</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ListaJugadores.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-muted">No se encontraron jugadores.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var jugador in ListaJugadores)
+                        {
                             <tr>
-                                <th>JugadorId</th>
-                                <th>Nombres</th>
-                                <th>Partidas</th>
-                                <th>Editar</th>
-                                <th>Eliminar</th>
+                                <td>@jugador.JugadorId</td>
+                                <td>@jugador.Nombres</td>
+                                <td>@jugador.Partidas</td>
+                                <td>
+                                    <a href="/Jugador/Edit/@jugador.JugadorId" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => MostrarModalEliminar(jugador)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach(var jugador in ListaJugadores)
-                            {
-                                <tr>
-                                    <td>@jugador.JugadorId</td>
-                                    <td>@jugador.Nombres</td>
-                                    <td>@jugador.Partidas</td>
-                                    <td>
-                                        <a href="/Jugador/Edit/@jugador.JugadorId" class="btn btn-outline-success btn-sm">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                    
-                                     </td>
-                                     <td>
-                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => ConfirmarEliminar (jugador.JugadorId)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer text-end">
+        <p>Total de Jugadores: @ListaJugadores.Count()</p>
+    </div>
+</div>
+
+@* Modal Bootstrap para eliminar *@
+<div class="modal fade @(MostrarPanelEliminar ? "show d-block" : "")" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Eliminar Jugador</h5>
+                <button type="button" class="btn-close" @onclick="CancelarEliminar"></button>
             </div>
-            @*Footer*@
-            <div class="card-footer">
-                <p>Total de Jugadores: @ListaJugadores.Count()</p>
+            <div class="modal-body">
+                <p class="fw-bold text-danger">¿Estás seguro de que deseas eliminar este jugador?</p>
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>JugadorId:</strong> @JugadorSeleccionado?.JugadorId</li>
+                    <li class="list-group-item"><strong>Nombre:</strong> @JugadorSeleccionado?.Nombres</li>
+                    <li class="list-group-item"><strong>Partidas:</strong> @JugadorSeleccionado?.Partidas</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CancelarEliminar">Cancelar</button>
+                <button class="btn btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
             </div>
         </div>
     </div>
@@ -97,54 +115,70 @@
 
 @code {
     public List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
-
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-    [Inject] public IJSRuntime JS { get; set; } = default!;
+
+    private bool MostrarPanelEliminar { get; set; } = false;
+    private Jugadores? JugadorSeleccionado { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        ListaJugadores = await jugadoresService.Listar(j => j.JugadorId > 0);
+        await CargarJugadores();
     }
 
-    private async Task Buscar()
+    private async Task CargarJugadores()
     {
+        var lista = await jugadoresService.Listar(j => true);
+
         if (!string.IsNullOrWhiteSpace(ValorFiltro))
         {
             if (Filtro == "JugadorId" && int.TryParse(ValorFiltro, out int id))
             {
-                ListaJugadores = await jugadoresService.Listar(j => j.JugadorId == id);
+                lista = lista.Where(j => j.JugadorId == id).ToList();
             }
             else if (Filtro == "Nombres")
             {
-                ListaJugadores = await jugadoresService.Listar(j => j.Nombres.ToLower().Contains(ValorFiltro.ToLower()));
+                lista = lista.Where(j => j.Nombres?.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) ?? false).ToList();
             }
         }
-        else
-        {
-            ListaJugadores = await jugadoresService.Listar(j => j.JugadorId > 0);
-        }
+
+        ListaJugadores = lista;
     }
 
-    public void Crear()
+    private async Task Buscar()
     {
-        Navigation.NavigateTo("/Jugador/Crate/");
+        await CargarJugadores();
     }
 
-    private async Task ConfirmarEliminar(int jugadorId)
+    private void MostrarModalEliminar(Jugadores jugador)
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm",
-        $"¿Estás seguro que deseas eliminar al jugador con ID {jugadorId}?");
+        JugadorSeleccionado = jugador;
+        MostrarPanelEliminar = true;
+    }
 
-        if (confirmado)
+    private void CancelarEliminar()
+    {
+        MostrarPanelEliminar = false;
+        JugadorSeleccionado = null;
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        if (JugadorSeleccionado != null)
         {
-            await jugadoresService.Eliminar(jugadorId);
-            ListaJugadores = await jugadoresService.Listar(j => j.JugadorId > 0);
+            await jugadoresService.Eliminar(JugadorSeleccionado.JugadorId);
+            await CargarJugadores();
+            CancelarEliminar();
         }
     }
 
     public void Editar(int jugadorId)
     {
         Navigation.NavigateTo($"/Jugador/Edit/{jugadorId}");
+    }
+
+    public void Crear()
+    {
+        Navigation.NavigateTo("/Jugador/Create/");
     }
 }

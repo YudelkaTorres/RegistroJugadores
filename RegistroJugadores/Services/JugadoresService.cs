@@ -10,27 +10,31 @@ namespace RegistroJugadores.Services
     {
         public async Task<bool> Guardar(Jugadores jugador)
         {
-            if (string.IsNullOrWhiteSpace(jugador.Nombres))
-                throw new ArgumentException("El nombre es obligatorio.");
-
-            if (jugador.Partidas < 0)
-                throw new ArgumentException("El número de partidas no puede ser menor que cero");
-
-            if (!await ExisteId(jugador.JugadorId))
+            try
             {
-                if (await ExisteNombre(0, jugador.Nombres))
-                    throw new InvalidOperationException("Ya existe un jugador con ese nombre.");
-
-                return await Insertar(jugador);
+                bool existe = await ExisteId(jugador.JugadorId);
+                if (!existe)
+                {
+                    if (await ExisteNombre(jugador.Nombres))
+                    {
+                        return false;
+                    }
+                    return await Insertar(jugador);
+                }
+                else
+                {
+                    if (await ExisteNombre(jugador.Nombres, jugador.JugadorId))
+                    {
+                        return false;
+                    }
+                    return await Modificar(jugador);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                if (await ExisteNombre(jugador.JugadorId, jugador.Nombres))
-                    throw new InvalidOperationException("Ya existe un jugador con ese nombre.");
-
-                return await Modificar(jugador);
+                Console.WriteLine($"Error al guardar el jugador: {ex.Message}");
+                return false;
             }
-       
         }
 
         private async Task<bool> ExisteId(int jugadorId)
@@ -40,13 +44,13 @@ namespace RegistroJugadores.Services
                 .AnyAsync(j => j.JugadorId == jugadorId);
         }
 
-        public async Task<bool> ExisteNombre(int jugadorId, string nombre)
+        public async Task<bool> ExisteNombre(string nombre, int jugadorId = 0)
         {
             await using var contexto = await DbFactory.CreateDbContextAsync();
             return await contexto.Jugadores
-				.AnyAsync(j => j.Nombres.ToLower() == nombre.ToLower()
-							   && j.JugadorId != jugadorId);
-		}
+                 .AnyAsync(j => j.Nombres.ToLower() == nombre.ToLower() && j.JugadorId != jugadorId);
+
+        }
 
         private async Task<bool> Insertar(Jugadores jugador)
         {
