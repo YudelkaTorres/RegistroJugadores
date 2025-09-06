@@ -11,6 +11,8 @@ namespace RegistroJugadores.Models
 
         [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "No se permiten caracteres especiales")]
         [Required(ErrorMessage = "El nombre es obligatorio.")]
+
+        [MaxLength(100)]
         public string Nombres { get; set; } = string.Empty;
 
         [Required(ErrorMessage ="Por favor digitar la cantidad de partidas.")]

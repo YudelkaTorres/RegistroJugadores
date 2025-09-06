@@ -14,15 +14,21 @@ namespace RegistroJugadores.Migrations
                 name: "Jugadores",
                 columns: table => new
                 {
-                    JugadorId = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Nombres = table.Column<string>(type: "TEXT", nullable: false),
-                    Partidas = table.Column<int>(type: "INTEGER", nullable: false)
+                    JugadorId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombres = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Partidas = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Jugadores", x => x.JugadorId);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jugadores_Nombres",
+                table: "Jugadores",
+                column: "Nombres",
+                unique: true);
         }
 
         /// <inheritdoc />
