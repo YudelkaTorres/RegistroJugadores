@@ -27,7 +27,7 @@
                 <label class="form-label"><strong>Búsqueda:</strong></label>
                 <div class="input-group">
                     <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
-                    <button type="button" class="btn btn-primary" @onclick="Buscar">
+                    <button type="button" class="btn btn-primary" @onclick="CargarJugadores">
                         <i class="bi bi-search"></i> Buscar
                     </button>
                 </div>
@@ -99,11 +99,18 @@
             </div>
             <div class="modal-body">
                 <p class="fw-bold text-danger">¿Estás seguro de que deseas eliminar este jugador?</p>
-                <ul class="list-group">
+                @if (JugadorSeleccionado != null)
+                {
+                    <ul class="list-group">
                     <li class="list-group-item"><strong>JugadorId:</strong> @JugadorSeleccionado?.JugadorId</li>
                     <li class="list-group-item"><strong>Nombre:</strong> @JugadorSeleccionado?.Nombres</li>
                     <li class="list-group-item"><strong>Partidas:</strong> @JugadorSeleccionado?.Partidas</li>
-                </ul>
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">No hay jugador seleccionado.</p>
+                }
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" @onclick="CancelarEliminar">Cancelar</button>
@@ -128,27 +135,31 @@
 
     private async Task CargarJugadores()
     {
-        var lista = await jugadoresService.Listar(j => true);
-
-        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        try
         {
-            if (Filtro == "JugadorId" && int.TryParse(ValorFiltro, out int id))
+            var lista = await jugadoresService.Listar(j => true);
+
+            if (!string.IsNullOrWhiteSpace(ValorFiltro))
             {
-                lista = lista.Where(j => j.JugadorId == id).ToList();
+                if (Filtro == "JugadorId" && int.TryParse(ValorFiltro, out int id))
+                {
+                    lista = lista.Where(j => j.JugadorId == id).ToList();
+                }
+                else if (Filtro == "Nombres")
+                {
+                    lista = lista.Where(j => j.Nombres?.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) ?? false).ToList();
+                }
             }
-            else if (Filtro == "Nombres")
-            {
-                lista = lista.Where(j => j.Nombres?.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) ?? false).ToList();
-            }
+
+            ListaJugadores = lista;
         }
-
-        ListaJugadores = lista;
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"[Error -CargarJugadores] {ex.Message}");
+            ListaJugadores = new List<Jugadores>();
+        }
     }
 
-    private async Task Buscar()
-    {
-        await CargarJugadores();
-    }
 
     private void MostrarModalEliminar(Jugadores jugador)
     {
@@ -166,9 +177,29 @@
     {
         if (JugadorSeleccionado != null)
         {
-            await jugadoresService.Eliminar(JugadorSeleccionado.JugadorId);
-            await CargarJugadores();
-            CancelarEliminar();
+            try
+            {
+                var eliminado = await jugadoresService.Eliminar(JugadorSeleccionado.JugadorId);
+
+                if (eliminado)
+                {
+                    await JS.InvokeVoidAsync("alert", "Jugador eliminado correctamente");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("alert", "No se pudo eliminar el jugador");
+                }
+                await CargarJugadores();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"[Error - confirmarEliminar] {ex.Message}");
+            }
+            finally
+            {
+                CancelarEliminar();
+            }
+
         }
     }
 

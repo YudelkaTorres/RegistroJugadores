@@ -8,10 +8,12 @@ namespace RegistroJugadores.Services
     public class JugadoresService
     {
         private readonly IDbContextFactory<Contexto> _dbFactory;
+        private readonly ILogger<JugadoresService> _logger;
 
-        public JugadoresService(IDbContextFactory<Contexto> dbFactory)
+        public JugadoresService(IDbContextFactory<Contexto> dbFactory, ILogger<JugadoresService> logger)
         {
             _dbFactory = dbFactory;
+            _logger = logger;
         }
 
         public async Task<bool> Guardar(Jugadores jugador)
@@ -35,62 +37,132 @@ namespace RegistroJugadores.Services
                     return await Modificar(jugador);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al guardar jugador {JugadorId}", jugador.JugadorId);
                 return false;
             }
         }
 
         private async Task<bool> ExisteId(int jugadorId)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.AnyAsync(j => j.JugadorId == jugadorId);
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                return await contexto.Jugadores.AnyAsync(j => j.JugadorId == jugadorId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar existencia del jugador {JugadorId}", jugadorId);
+                return false;
+            }
         }
 
         public async Task<bool> ExisteNombre(string nombre, int jugadorId = 0)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.AnyAsync(j => j.Nombres.ToLower() == nombre.ToLower() && j.JugadorId != jugadorId);
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                return await contexto.Jugadores.AnyAsync(j => j.Nombres.ToLower() == nombre.ToLower() && j.JugadorId != jugadorId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar existencia del nombre {Nombre}", nombre);
+                return false;
+            }
         }
 
         private async Task<bool> Insertar(Jugadores jugador)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            contexto.Jugadores.Add(jugador);
-            return await contexto.SaveChangesAsync() > 0;
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                contexto.Jugadores.Add(jugador);
+                var resultado = await contexto.SaveChangesAsync() > 0;
+                _logger.LogInformation("Jugador {JugadorId} insertado correctamente", jugador.JugadorId);
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al insertar jugador {JugadorId}", jugador.JugadorId);
+                return false;
+            }
         }
 
         private async Task<bool> Modificar(Jugadores jugador)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            contexto.Update(jugador);
-            var modificado = await contexto.SaveChangesAsync() > 0;
-            contexto.Entry(jugador).State = EntityState.Detached;
-            return modificado;
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                contexto.Update(jugador);
+                var modificado = await contexto.SaveChangesAsync() > 0;
+                contexto.Entry(jugador).State = EntityState.Detached;
+                _logger.LogInformation("Jugador {JugadorId} modificado correctamente", jugador.JugadorId);
+                return modificado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al modificar jugador {JugadorId}", jugador.JugadorId);
+                return false;
+            }
         }
 
         public async Task<Jugadores?> BuscarId(int jugadorId)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.AsNoTracking().FirstOrDefaultAsync(j => j.JugadorId == jugadorId);
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                return await contexto.Jugadores.AsNoTracking().FirstOrDefaultAsync(j => j.JugadorId == jugadorId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar jugador por Id {JugadorId}", jugadorId);
+                return null;
+            }
         }
 
         public async Task<Jugadores?> BuscarNombre(string nombre)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.AsNoTracking().FirstOrDefaultAsync(j => j.Nombres.ToLower() == nombre.ToLower());
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                return await contexto.Jugadores.AsNoTracking().FirstOrDefaultAsync(j => j.Nombres.ToLower() == nombre.ToLower());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar jugador por nombre {Nombre}", nombre);
+                return null;
+            }
         }
 
         public async Task<bool> Eliminar(int jugadorId)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.Where(j => j.JugadorId == jugadorId).ExecuteDeleteAsync() > 0;
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                var eliminado = await contexto.Jugadores.Where(j => j.JugadorId == jugadorId).ExecuteDeleteAsync() > 0;
+                _logger.LogInformation("Jugador {JugadorId} eliminado correctamente", jugadorId);
+                return eliminado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar jugador {JugadorId}", jugadorId);
+                return false;
+            }
         }
 
         public async Task<List<Jugadores>> Listar(Expression<Func<Jugadores, bool>> criterio)
         {
-            await using var contexto = await _dbFactory.CreateDbContextAsync();
-            return await contexto.Jugadores.Where(criterio).AsNoTracking().ToListAsync();
+            try
+            {
+                await using var contexto = await _dbFactory.CreateDbContextAsync();
+                return await contexto.Jugadores.Where(criterio).AsNoTracking().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al listar jugadores");
+                return new List<Jugadores>();
+            }
         }
     }
 }
