@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace RegistroJugadores.Models
-{
+namespace RegistroJugadores.Models;
+
     [Index(nameof(Nombres), IsUnique = true)]
     public class Jugadores
     {
@@ -19,4 +19,4 @@ namespace RegistroJugadores.Models
         [Range(0, int.MaxValue, ErrorMessage ="La cantidad de partidas debe ser un número positivo")]
         public int Partidas { get; set; }
     }
-}
+
