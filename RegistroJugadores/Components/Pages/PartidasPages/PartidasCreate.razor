@@ -1,0 +1,126 @@
+﻿@page "/Partidas/Create"
+@inject PartidasService partidaService
+@inject JugadoresService jugadoresService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+
+<PageTitle>Crear Partida</PageTitle>
+<EditForm Model="Partida" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title">Crear Partida</h5>
+            </div>
+                <div class="card-body">
+                    @*PartidaId*@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>PartidaId</strong></label>
+                        <InputNumber class="form-control" @bind-Value="Partida.PartidaId" readonly></InputNumber>
+                    </div>
+                    @*Jugador1*@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Jugador 1</strong></label>
+                        <InputSelect class="form-control form-select" @bind-Value="Partida.Jugador1Id" @onchange="OnJugador1Changed">
+                            <option value="0" selected disabled>Seleccione Jugador 1</option>
+                            @for (int i = 0; i < ListaJugadores.Count; i ++)
+                            {
+                                <option value="@ListaJugadores[i].JugadorId">@ListaJugadores[i].Nombres</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    @*Jugador2*@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Jugador 2</strong></label>
+                    <InputSelect class="form-control form-select" @bind-Value="Partida.Jugador2Id" disabled="@(!HabilitarJugador2)">
+                            <option value="0" selected disabled>Seleccione Jugador 2</option>
+                            @for (int i = 0; i < ListaJugadores.Count; i++)
+                            {
+                                @if (ListaJugadores[i].JugadorId != Partida.Jugador1Id)
+                                {
+                                    <option value="@ListaJugadores[i].JugadorId">@ListaJugadores[i].Nombres</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                    @* TurnoJugador *@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Turno del Jugador</strong></label>
+                        <InputSelect class="form-select" @bind-Value="Partida.TurnoJugadorId" disabled="@(!AmbosJugadoresSeleccionados)">
+                            <option value="0" disabled selected>Elija qui&eacute;n inicia</option>
+                            @if (Partida.Jugador1Id > 0)
+                            {
+                                <option value="@Partida.Jugador1Id">@ListaJugadores.First(jugador => jugador.JugadorId == Partida.Jugador1Id).Nombres</option>
+                            }
+                            @if (Partida.Jugador2Id.HasValue && Partida.Jugador2Id.Value > 0)
+                            {
+                                <option value="@Partida.Jugador2Id">@ListaJugadores.First(jugador => jugador.JugadorId == Partida.Jugador2Id).Nombres</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    @*EstadoPartida*@
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Estado de la Partida</strong></label>
+                        <InputSelect class="form-control form-select" @bind-Value="Partida.EstadoPartida">
+                            <option value="" disabled selected>Seleccione estado</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Juego">En Juego</option>
+                            <option value="Finalizada">Finalizada</option>
+                        </InputSelect>
+                    </div>
+                </div>
+                @* Footer *@
+                <div class="card-footer text-center mt-2">
+                    <a href="/Partidas/Index" class="btn btn-secondary"> <span class="bi bi-arrow-left"></span> Volver</a>
+                    <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+                </div>
+        </div>
+    </div>
+</EditForm>
+@code {
+    public Partidas Partida { get; set; } = new Partidas();
+    public List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
+    private bool HabilitarJugador2 => Partida.Jugador1Id > 0;
+    public bool AmbosJugadoresSeleccionados => Partida.Jugador1Id > 0 && Partida.Jugador2Id > 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaJugadores = await jugadoresService.Listar(jugador => true);
+    }
+
+    private void OnJugador1Changed(ChangeEventArgs e)
+    {
+        Partida.Jugador2Id = null;
+        Partida.TurnoJugadorId = 0;
+    }
+
+    private async Task Guardar()
+    {
+        if (Partida.Jugador1Id == 0)
+        {
+            toastService.ShowWarning("Debe seleccionar Jugador 1.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(Partida.EstadoPartida))
+        {
+            toastService.ShowWarning("Debe seleccionar el estado de la partida.");
+            return;
+        }
+        Partida.TurnoJugadorId = Partida.Jugador1Id;
+
+        var paso = await partidaService.Guardar(Partida);
+
+        if (paso)
+        {
+            toastService.ShowSuccess("Partida creada correctamente");
+            navigationManager.NavigateTo("/Partidas/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se pudo crear la partida");
+        }
+    }
+}

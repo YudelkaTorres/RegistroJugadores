@@ -2,7 +2,6 @@ using RegistroJugadores.Components;
 using RegistroJugadores.DAL;
 using Microsoft.EntityFrameworkCore;
 using RegistroJugadores.Services;
-using BootstrapBlazor.Components;
 
 namespace RegistroJugadores
 {
@@ -15,17 +14,17 @@ namespace RegistroJugadores
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-            var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
+            var ConnectionString = builder.Configuration.GetConnectionString("SqlConStr");
 
             // Usar AddDbContextFactory para que JugadoresService reciba IDbContextFactory<Contexto>
             builder.Services.AddDbContextFactory<Contexto>(options =>
-                options.UseSqlServer(ConStr, sqlOptions =>
+                options.UseSqlServer(ConnectionString, sqlOptions =>
                     sqlOptions.EnableRetryOnFailure()));
 
             builder.Services.AddScoped<JugadoresService>();
+            builder.Services.AddScoped<PartidasService>();
 
-            builder.Services.AddBootstrapBlazor();
-            builder.Services.AddScoped<ToastService>();
+            builder.Services.AddBlazorBootstrap();
 
             var app = builder.Build();
 
