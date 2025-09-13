@@ -125,9 +125,9 @@
                     <table class="table table-bordered">
                         <tr><th>ID</th><td>@PartidaSeleccionada.PartidaId</td></tr>
                         <tr><th>Jugador 1</th><td>@PartidaSeleccionada.Jugador1?.Nombres</td></tr>
-                        <tr><th>Jugador 2</th><td>@PartidaSeleccionada.Jugador2?.Nombres ?? "_"</td></tr>
-                        <tr><th>Ganador</th><td>@PartidaSeleccionada.Ganador?.Nombres ?? "_"</td></tr>
-                        <tr><th>Estado</th><td>@PartidaSeleccionada.EstadoPartida</td></tr>
+                        <tr><th>Jugador 2</th><td>@(PartidaSeleccionada.Jugador2?.Nombres ?? "_")</td></tr>
+                        <tr><th>Ganador</th><td>@(PartidaSeleccionada.Ganador?.Nombres ?? "_")</td></tr>
+                        <tr><th>EstadoPartida</th><td>@PartidaSeleccionada.EstadoPartida</td></tr>
                         <tr><th>Turno</th><td>@PartidaSeleccionada.TurnoJugador?.Nombres</td></tr>
                         <tr><th>Estado Tablero</th><td>@PartidaSeleccionada.EstadoTablero</td></tr>
                     </table>

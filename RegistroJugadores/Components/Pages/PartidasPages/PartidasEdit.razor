@@ -83,10 +83,42 @@
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
                 <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+                <button type="button" class="btn btn-danger bi bi-trash" @onclick="MostrarModalEliminar"> Eliminar</button>
             </div>
         </div>
     </div>
 </EditForm>
+@* Modal Eliminar *@
+<div class="modal fade @(MostrarEliminar ? "show d-block" : "")"
+     tabindex="-1" style="background-color: rgba(0,0,0,0.5);" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" @onclick="CerrarModalEliminar"></button>
+            </div>
+            <div class="modal-body">
+                @if (Partida != null)
+                {
+                    <p>¿Seguro que deseas eliminar la partida?</p>
+                    <table class="table table-bordered">
+                        <tr><th>ID</th><td>@Partida.PartidaId</td></tr>
+                        <tr><th>Jugador 1</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador1Id)?.Nombres</td></tr>
+                        <tr><th>Jugador 2</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador2Id)?.Nombres</td></tr>
+                        <tr><th>Turno</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.TurnoJugadorId)?.Nombres</td></tr>
+                        <tr><th>Ganador</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.GanadorId)?.Nombres </td></tr>
+                        <tr><th>Estado Tablero</th><td>@Partida.EstadoTablero</td></tr>
+                        <tr><th>Estado Partida</th><td>@Partida.EstadoPartida</td></tr>
+                    </table>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalEliminar">Cancelar</button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -95,6 +127,7 @@
     public List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
     private bool HabilitarJugador2 => Partida.Jugador1Id > 0;
     public bool AmbosJugadoresSeleccionados => Partida.Jugador1Id > 0 && Partida.Jugador2Id > 0;
+    private bool MostrarEliminar = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,5 +178,29 @@
         {
             toastService.ShowError("No se pudo actualizar la partida");
         }
+    }
+    private void MostrarModalEliminar()
+    {
+        MostrarEliminar = true;
+    }
+
+    private void CerrarModalEliminar()
+    {
+        MostrarEliminar = false;
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        var eliminado = await partidaService.Eliminar(Partida.PartidaId);
+        if (eliminado)
+        {
+            toastService.ShowSuccess("Partida eliminada correctamente");
+            navigationManager.NavigateTo("/Partidas/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se pudo eliminar la partida");
+        }
+        MostrarEliminar = false;
     }
 }
