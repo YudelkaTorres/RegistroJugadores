@@ -13,14 +13,14 @@ namespace RegistroJugadores.Migrations
             migrationBuilder.RenameColumn(
                 name: "Partidas",
                 table: "Jugadores",
-                newName: "Victorias");
+                newName: "Victoria");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "Victorias",
+                name: "Victoria",
                 table: "Jugadores",
                 newName: "Partidas");
         }

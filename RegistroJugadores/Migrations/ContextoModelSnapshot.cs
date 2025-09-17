@@ -35,7 +35,7 @@ namespace RegistroJugadores.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("Victorias")
+                    b.Property<int>("Victoria")
                         .HasColumnType("int");
 
                     b.HasKey("JugadorId");
