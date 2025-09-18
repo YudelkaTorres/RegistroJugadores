@@ -13,27 +13,27 @@
             <h5 class="mb-0">Crear un nuevo jugador</h5>
         </div>
         <div class="card-body">
-            <EditForm Model="Jugadores" OnValidSubmit="Guardar">
+            <EditForm Model="Jugador" OnValidSubmit="Guardar">
                 <DataAnnotationsValidator />
                 <div class="row">
                     @* JugadorId*@
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold">JugadorId:</label>
-                        <InputNumber class="form-control" @bind-Value="Jugadores.JugadorId" readonly />
+                        <InputNumber class="form-control" @bind-Value="Jugador.JugadorId" readonly />
                     </div>
 
                     @*Nombres*@
                     <div class="col-md-6 mb-3">
                         <label for="Nombre" class="form-label fw-bold">Nombre:</label>
-                        <InputText id="nombre" class="form-control" @bind-Value="Jugadores.Nombres" />
-                        <ValidationMessage For="() => Jugadores.Nombres" />
+                        <InputText id="nombre" class="form-control" @bind-Value="Jugador.Nombres" />
+                        <ValidationMessage For="() => Jugador.Nombres" />
                     </div>
 
-                    @*Partidas*@
+                    @*Victorias*@
                     <div class="col-md-6 mb-3">
-                        <label for="Partidas" class="form-label fw-bold">Partidas</label>
-                        <InputNumber id="Partidas" class="form-control" @bind-Value="Jugadores.Victorias" />
-                        <ValidationMessage For="() => Jugadores.Victorias" />
+                        <label for="" class="form-label fw-bold">Victorias</label>
+                        <InputNumber id="" class="form-control" @bind-Value="Jugador.Victorias" />
+                        <ValidationMessage For="() => Jugador.Victorias" />
                     </div>
                 </div>
 
@@ -56,17 +56,17 @@
 </div>
 
 @code {
-    public Jugadores Jugadores { get; set; } = new();
+    public Jugadores Jugador { get; set; } = new();
     public string Mensaje { get; set; } = string.Empty;
 
     private async Task Guardar()
     {
-        if (await JugadoresService.ExisteNombre(Jugadores.Nombres))
+        if (await JugadoresService.ExisteNombre(Jugador.Nombres))
         {
             Mensaje = "Ya existe un jugador con este nombre.";
             return;
         }
-        if (await JugadoresService.Guardar(Jugadores))
+        if (await JugadoresService.Guardar(Jugador))
         {
             NavigationManager.NavigateTo("/Jugador/Index");
         }
