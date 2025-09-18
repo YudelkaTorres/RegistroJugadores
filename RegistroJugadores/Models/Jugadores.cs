@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace RegistroJugadores.Models;
@@ -15,10 +16,12 @@ namespace RegistroJugadores.Models;
         [MaxLength(100)]
         public string Nombres { get; set; } = string.Empty;
 
-        [Required(ErrorMessage ="Por favor digitar la cantidad de partidas.")]
-        [Range(0, int.MaxValue, ErrorMessage ="La cantidad de partidas debe ser un número positivo")]
+        [Required(ErrorMessage ="Por favor digitar la cantidad de Victorias.")]
+        [Range(0, int.MaxValue, ErrorMessage ="La cantidad de Victorias debe ser un número positivo")]
         public int Victorias { get; set; } = 0;
         public int Derrotas { get; set; } = 0;
         public int Empates { get; set; } = 0;
-    }
+        [InverseProperty(nameof(Models.Movimientos.Jugador))]
+        public virtual ICollection<Movimientos> Movimientos { get; set; } = new List<Movimientos>();
+}
 

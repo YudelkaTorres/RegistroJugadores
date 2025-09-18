@@ -10,6 +10,73 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="RegistroJugadores.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+
+    <!-- Estilos CSS integrados directamente en el componente -->
+    <style>
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            font-family: sans-serif;
+            padding-top: 2rem;
+        }
+
+        .selection-screen h1,
+        .game-screen h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .player-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Estilos para el tablero de juego */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 3rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+            .cell:hover:not(:disabled) {
+                background-color: #e0e0e0;
+            }
+
+            .cell:disabled {
+                cursor: not-allowed;
+            }
+
+        /* Colores para los jugadores */
+        .player-x {
+            color: #E91E63;
+            /* Rosa */
+        }
+
+        .player-o {
+            color: #2196F3;
+            /* Azul */
+        }
+    </style>
+
     <HeadOutlet />
 </head>
 

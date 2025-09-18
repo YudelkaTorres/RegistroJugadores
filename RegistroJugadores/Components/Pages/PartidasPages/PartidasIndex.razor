@@ -7,12 +7,12 @@
 <PageTitle>Index de Partidas</PageTitle>
 <div class="container">
     <div class="card shadow-lg">
-            <div class="card-header space-between">
-                <h5 class="card-title">Index de Partidas</h5>
-                <a href="/Partidas/Create" class="btn btn-primary">
-                    <span class="bi bi-plus-square mt-3"></span> Crear
-                </a>
-            </div>
+        <div class="card-header space-between">
+            <h5 class="card-title">Index de Partidas</h5>
+            <a href="/Partidas/Create" class="btn btn-primary">
+                <span class="bi bi-plus-square mt-3"></span> Crear
+            </a>
+        </div>
 
         <div class="card-body">
 
@@ -53,7 +53,7 @@
                 @*Restablecer*@
                 <div class="col-3">
                     <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise"
-                        @onclick="Restablecer">
+                            @onclick="Restablecer">
                     </button>
                 </div>
 
@@ -68,6 +68,8 @@
                             <th><strong>EstadoPartida</strong></th>
                             <th><strong>TurnoJugador</strong></th>
                             <th><strong>EstadoTablero</strong></th>
+                            <th><strong>Fecha Inicio</strong></th>
+                            <th><strong>Fecha Fin</strong></th>
                             <th><strong>Opciones</strong></th>
                         </tr>
                     </thead>
@@ -82,7 +84,9 @@
                                 <td>@partida.EstadoPartida</td>
                                 <td>@(partida.TurnoJugador?.Nombres ?? "_")</td>
                                 <td>@partida.EstadoTablero</td>
-
+                                <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(partida.FechaFin.HasValue? partida.FechaFin.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                
                                 <td class="text-center">
                                     <a href="/Partidas/Edit/@partida.PartidaId"
                                        class="btn btn-outline-primary bi bi-pencil-square"></a>
@@ -97,12 +101,23 @@
             </div>
             @*Footer*@
             <div class="card-footer space-between">
-                <label class="ms-2"><strong>Total de partidas:</strong>@ListaPartidas.Count</label>
-                <div class="col-5">
-                    <label class="ms-2"><strong>Total de Partidas Ganadas:</strong>@ListaPartidas.Count(partida => partida.Ganador != null)</label>
+                @*Total de partidas*@
+                <label class="ms-2"><strong>Total de partidas:</strong> @ListaPartidas.Count</label>
+
+                @*Total de partidas ganadas*@
+                <div class="col-4">
+                    <label class="ms-2">
+                        <strong>Total de Partidas Ganadas:</strong>
+                        @ListaPartidas.Count(p => p.EstadoPartida == "Finalizada" && p.GanadorId != null)
+                    </label>
                 </div>
-                <div class="col-5">
-                    <label class="ms-2"><strong>Total de Partidas Jugadas:</strong>@ListaPartidas.Count</label>
+
+                @*Total de empates*@
+                <div class="col-4">
+                    <label class="ms-2">
+                        <strong>Total de Empates:</strong>
+                        @ListaPartidas.Count(p => p.EstadoPartida == "Empate")
+                    </label>
                 </div>
             </div>
         </div>
