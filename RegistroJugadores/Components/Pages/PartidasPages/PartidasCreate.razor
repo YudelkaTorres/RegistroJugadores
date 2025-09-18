@@ -98,19 +98,6 @@
 
     private async Task Guardar()
     {
-        if (Partida.Jugador1Id == 0)
-        {
-            toastService.ShowWarning("Debe seleccionar Jugador 1.");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(Partida.EstadoPartida))
-        {
-            toastService.ShowWarning("Debe seleccionar el estado de la partida.");
-            return;
-        }
-        Partida.TurnoJugadorId = Partida.Jugador1Id;
-
         var paso = await partidaService.Guardar(Partida);
 
         if (paso)
