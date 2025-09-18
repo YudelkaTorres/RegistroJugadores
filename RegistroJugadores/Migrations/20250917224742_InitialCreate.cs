@@ -6,11 +6,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RegistroJugadores.Migrations
 {
     /// <inheritdoc />
-    public partial class Secundary : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Jugadores",
+                columns: table => new
+                {
+                    JugadorId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombres = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Victorias = table.Column<int>(type: "int", nullable: false),
+                    Derrotas = table.Column<int>(type: "int", nullable: false),
+                    Empates = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Jugadores", x => x.JugadorId);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Partidas",
                 columns: table => new
@@ -56,6 +72,12 @@ namespace RegistroJugadores.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Jugadores_Nombres",
+                table: "Jugadores",
+                column: "Nombres",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Partidas_GanadorId",
                 table: "Partidas",
                 column: "GanadorId");
@@ -81,6 +103,9 @@ namespace RegistroJugadores.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Partidas");
+
+            migrationBuilder.DropTable(
+                name: "Jugadores");
         }
     }
 }
