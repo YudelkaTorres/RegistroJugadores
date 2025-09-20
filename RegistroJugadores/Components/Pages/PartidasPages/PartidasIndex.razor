@@ -1,0 +1,234 @@
+﻿@page "/Partidas/Index"
+
+@inject PartidasService partidaService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+
+<PageTitle>Index de Partidas</PageTitle>
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header space-between">
+            <h5 class="card-title">Index de Partidas</h5>
+            <a href="/Partidas/Create" class="btn btn-primary">
+                <span class="bi bi-plus-square mt-3"></span> Crear
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            @*Labels*@
+            <div class="row">
+                @*Filtrar por*@
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Filtrar por</strong></label>
+                </div>
+
+                @*ValorFiltro*@
+                <div class="col-4">
+                    <label class="col-form-label"><strong>B&uacute;squeda</strong></label>
+                </div>
+            </div>
+
+            @*Inputs y botones*@
+            <div class="row align-items-center">
+                @*Filtro*@
+                <div class="col-3">
+                    <InputSelect class="form-select" @bind-Value="Filtro">
+                        <option value="" selected disabled> Elija una opci&oacute;n</option>
+                        <option value="PartidaId">PartidaId</option>
+                        <option value="Jugador1">Jugador1</option>
+                        <option value="Jugador2">Jugador2</option>
+                        <option value="EstadoPartida">EstadoPartida</option>
+                    </InputSelect>
+                </div>
+
+                @*Búsqueda*@
+                <div class="col-4">
+                    <div class="input-group">
+                        <input class="form-control" @bind="ValorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary bi bi-search" @onclick="Buscar"></button>
+                    </div>
+                </div>
+
+                @*Restablecer*@
+                <div class="col-3">
+                    <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise"
+                            @onclick="Restablecer">
+                    </button>
+                </div>
+
+                @*Tabla de partidas*@
+                <table class="table table-hover text-center mt-3">
+                    <thead class="table table-striped text-black">
+                        <tr>
+                            <th><strong>PartidaId</strong></th>
+                            <th><strong>Jugador1</strong></th>
+                            <th><strong>Jugador2</strong></th>
+                            <th><strong>Ganador</strong></th>
+                            <th><strong>EstadoPartida</strong></th>
+                            <th><strong>TurnoJugador</strong></th>
+                            <th><strong>EstadoTablero</strong></th>
+                            <th><strong>Fecha Inicio</strong></th>
+                            <th><strong>Fecha Fin</strong></th>
+                            <th><strong>Opciones</strong></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var partida in ListaPartidas)
+                        {
+                            <tr>
+                                <td>@partida.PartidaId</td>
+                                <td>@partida.Jugador1.Nombres</td>
+                                <td>@partida.Jugador2?.Nombres</td>
+                                <td>@(partida.Ganador?.Nombres ?? "_")</td>
+                                <td>@partida.EstadoPartida</td>
+                                <td>@(partida.TurnoJugador?.Nombres ?? "_")</td>
+                                <td>@partida.EstadoTablero</td>
+                                <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(partida.FechaFin.HasValue? partida.FechaFin.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                
+                                <td class="text-center">
+                                    <a href="/Partidas/Edit/@partida.PartidaId"
+                                       class="btn btn-outline-primary bi bi-pencil-square"></a>
+                                    <button type="button" class="btn btn-outline-danger bi bi-trash"
+                                            @onclick="() => MostrarModalEliminar(partida.PartidaId)">
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @*Footer*@
+            <div class="card-footer space-between">
+                @*Total de partidas*@
+                <label class="ms-2"><strong>Total de partidas:</strong> @ListaPartidas.Count</label>
+
+                @*Total de partidas ganadas*@
+                <div class="col-4">
+                    <label class="ms-2">
+                        <strong>Total de Partidas Ganadas:</strong>
+                        @ListaPartidas.Count(p => p.EstadoPartida == "Finalizada" && p.GanadorId != null)
+                    </label>
+                </div>
+
+                @*Total de empates*@
+                <div class="col-4">
+                    <label class="ms-2">
+                        <strong>Total de Empates:</strong>
+                        @ListaPartidas.Count(p => p.EstadoPartida == "Empate")
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@* Modal Eliminar *@
+<div class="modal fade @(MostrarEliminar ? "show d-block" : "")"
+     tabindex="-1" style="background-color: rgba(0,0,0,0.5);" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close"
+                        @onclick="CerrarModalEliminar"></button>
+            </div>
+            <div class="modal-body">
+                @if (PartidaSeleccionada != null)
+                {
+                    <p>¿Seguro que deseas eliminar la partida?</p>
+                    <table class="table table-bordered">
+                        <tr><th>ID</th><td>@PartidaSeleccionada.PartidaId</td></tr>
+                        <tr><th>Jugador 1</th><td>@PartidaSeleccionada.Jugador1?.Nombres</td></tr>
+                        <tr><th>Jugador 2</th><td>@(PartidaSeleccionada.Jugador2?.Nombres ?? "_")</td></tr>
+                        <tr><th>Ganador</th><td>@(PartidaSeleccionada.Ganador?.Nombres ?? "_")</td></tr>
+                        <tr><th>EstadoPartida</th><td>@PartidaSeleccionada.EstadoPartida</td></tr>
+                        <tr><th>Turno</th><td>@PartidaSeleccionada.TurnoJugador?.Nombres</td></tr>
+                        <tr><th>Estado Tablero</th><td>@PartidaSeleccionada.EstadoTablero</td></tr>
+                    </table>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalEliminar">Cancelar</button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Partidas> ListaPartidas { get; set; } = new List<Partidas>();
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+    private bool MostrarEliminar = false;
+    private Partidas? PartidaSeleccionada;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaPartidas = await partidaService.Listar(partida => partida.PartidaId > 0);
+    }
+    private async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(Filtro) || string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            ListaPartidas = await partidaService.Listar(partida => partida.PartidaId > 0);
+            return;
+        }
+
+        if (Filtro == "PartidaId" && int.TryParse(ValorFiltro, out int id))
+        {
+            ListaPartidas = await partidaService.Listar(partida => partida.PartidaId == id);
+        }
+        else if (Filtro == "Jugador1")
+        {
+            ListaPartidas = await partidaService.Listar(partida =>
+                partida.Jugador1.Nombres.ToLower().Contains(ValorFiltro.ToLower()));
+        }
+        else if (Filtro == "Jugador2")
+        {
+            ListaPartidas = await partidaService.Listar(partida =>
+                partida.Jugador2 != null &&
+                partida.Jugador2.Nombres.ToLower().Contains(ValorFiltro.ToLower()));
+        }
+        else if (Filtro == "EstadoPartida")
+        {
+            ListaPartidas = await partidaService.Listar(partida =>
+                partida.EstadoPartida.ToLower().Contains(ValorFiltro.ToLower()));
+        }
+    }
+    private async Task Restablecer()
+    {
+        ListaPartidas = await partidaService.Listar(partida => partida.PartidaId > 0);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+    private void MostrarModalEliminar(int partidaId)
+    {
+        PartidaSeleccionada = ListaPartidas.FirstOrDefault(partida => partida.PartidaId == partidaId);
+        MostrarEliminar = true;
+    }
+    private void CerrarModalEliminar()
+    {
+        MostrarEliminar = false;
+        PartidaSeleccionada = null;
+    }
+    private async Task ConfirmarEliminar()
+    {
+        if (PartidaSeleccionada != null)
+        {
+            var eliminado = await partidaService.Eliminar(PartidaSeleccionada.PartidaId);
+            if (eliminado)
+            {
+                toastService.ShowSuccess("Partida eliminada correctamente");
+                ListaPartidas = await partidaService.Listar(p => p.PartidaId > 0);
+            }
+            else
+            {
+                toastService.ShowError("No se pudo eliminar la partida");
+            }
+        }
+
+        MostrarEliminar = false;
+        PartidaSeleccionada = null;
+    }
+}

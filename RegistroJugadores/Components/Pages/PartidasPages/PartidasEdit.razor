@@ -1,0 +1,206 @@
+﻿@page "/Partidas/Edit/{PartidaId:int}"
+
+@inject PartidasService partidaService
+@inject JugadoresService jugadoresService
+@inject NavigationManager navigationManager
+@inject ToastService toastService
+
+<PageTitle>Edit</PageTitle>
+<EditForm Model="Partida" OnValidSubmit="Modificar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title">Editar Partida</h5>
+            </div>
+            <div class="card-body">
+                @*PartidaId*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>PartidaId</strong></label>
+                    <InputNumber class="form-control" @bind-Value="Partida.PartidaId" readonly />
+                </div>
+
+                @*Jugador1*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Jugador 1</strong></label>
+                    <InputSelect class="form-control form-select" @bind-Value="Partida.Jugador1Id" @onchange="OnJugador1Changed">
+                        <option value="0" disabled>Seleccione Jugador 1</option>
+                        @for (int i = 0; i < ListaJugadores.Count; i++)
+                        {
+                            <option value="@ListaJugadores[i].JugadorId">@ListaJugadores[i].Nombres</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                @*Jugador2*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Jugador 2</strong></label>
+                    <InputSelect class="form-control form-select" @bind-Value="Partida.Jugador2Id" disabled="@(!HabilitarJugador2)">
+                        <option value="0" disabled>Seleccione Jugador 2</option>
+                        @for (int i = 0; i < ListaJugadores.Count; i++)
+                        {
+                            @if (ListaJugadores[i].JugadorId != Partida.Jugador1Id)
+                            {
+                                <option value="@ListaJugadores[i].JugadorId">@ListaJugadores[i].Nombres</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+
+                @*TurnoJugador*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Turno del Jugador</strong></label>
+                    <InputSelect class="form-select" @bind-Value="Partida.TurnoJugadorId" disabled="@(!AmbosJugadoresSeleccionados)">
+                        <option value="0" disabled>Elija quién inicia</option>
+                        @if (Partida.Jugador1Id > 0)
+                        {
+                            <option value="@Partida.Jugador1Id">@ListaJugadores.First(j => j.JugadorId == Partida.Jugador1Id).Nombres</option>
+                        }
+                        @if (Partida.Jugador2Id.HasValue && Partida.Jugador2Id.Value > 0)
+                        {
+                            <option value="@Partida.Jugador2Id">@ListaJugadores.First(j => j.JugadorId == Partida.Jugador2Id).Nombres</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                @*EstadoPartida*@
+                <div class="mb-3">
+                    <label class="form-label"><strong>Estado de la Partida</strong></label>
+                    <InputSelect class="form-control form-select" @bind-Value="Partida.EstadoPartida">
+                        <option value="" disabled>Seleccione estado</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En Juego">En Juego</option>
+                        <option value="Finalizada">Finalizada</option>
+                    </InputSelect>
+                </div>
+            </div>
+
+            @*Footer*@
+            <div class="card-footer text-center mt-2">
+                <a href="/Partidas/Index" class="btn btn-secondary">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+                <button type="submit" class="btn btn-primary bi bi-floppy"> Guardar</button>
+                <button type="button" class="btn btn-danger bi bi-trash" @onclick="MostrarModalEliminar"> Eliminar</button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+@* Modal Eliminar *@
+<div class="modal fade @(MostrarEliminar ? "show d-block" : "")"
+     tabindex="-1" style="background-color: rgba(0,0,0,0.5);" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" @onclick="CerrarModalEliminar"></button>
+            </div>
+            <div class="modal-body">
+                @if (Partida != null)
+                {
+                    <p>¿Seguro que deseas eliminar la partida?</p>
+                    <table class="table table-bordered">
+                        <tr><th>ID</th><td>@Partida.PartidaId</td></tr>
+                        <tr><th>Jugador 1</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador1Id)?.Nombres</td></tr>
+                        <tr><th>Jugador 2</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador2Id)?.Nombres</td></tr>
+                        <tr><th>Turno</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.TurnoJugadorId)?.Nombres</td></tr>
+                        <tr><th>Ganador</th><td>@ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.GanadorId)?.Nombres </td></tr>
+                        <tr><th>Estado Tablero</th><td>@Partida.EstadoTablero</td></tr>
+                        <tr><th>Estado Partida</th><td>@Partida.EstadoPartida</td></tr>
+                    </table>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalEliminar">Cancelar</button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int PartidaId { get; set; }
+    public Partidas Partida { get; set; } = new Partidas();
+    public List<Jugadores> ListaJugadores { get; set; } = new List<Jugadores>();
+    private bool HabilitarJugador2 => Partida.Jugador1Id > 0;
+    public bool AmbosJugadoresSeleccionados => Partida.Jugador1Id > 0 && Partida.Jugador2Id > 0;
+    private bool MostrarEliminar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaJugadores = await jugadoresService.Listar(j => true);
+        var partidaExistente = await partidaService.Buscar(PartidaId);
+        if (partidaExistente != null)
+        {
+            Partida = partidaExistente;
+        }
+        else
+        {
+            toastService.ShowError("No se encontró la partida");
+            navigationManager.NavigateTo("/Partidas/Index");
+        }
+    }
+
+    private void OnJugador1Changed(ChangeEventArgs e)
+    {
+        Partida.Jugador2Id = null;
+        Partida.TurnoJugadorId = 0;
+    }
+
+    private async Task Modificar()
+    {
+        if (Partida.Jugador1Id == 0)
+        {
+            toastService.ShowWarning("Debe seleccionar Jugador 1.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(Partida.EstadoPartida))
+        {
+            toastService.ShowWarning("Debe seleccionar el estado de la partida.");
+            return;
+        }
+
+        if (!Partida.Jugador2Id.HasValue || Partida.Jugador2Id.Value == 0)
+            Partida.TurnoJugadorId = Partida.Jugador1Id;
+
+        var paso = await partidaService.Guardar(Partida);
+
+        if (paso)
+        {
+            toastService.ShowSuccess("Partida actualizada correctamente");
+            navigationManager.NavigateTo("/Partidas/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se pudo actualizar la partida");
+        }
+    }
+    private void MostrarModalEliminar()
+    {
+        MostrarEliminar = true;
+    }
+
+    private void CerrarModalEliminar()
+    {
+        MostrarEliminar = false;
+    }
+
+    private async Task ConfirmarEliminar()
+    {
+        var eliminado = await partidaService.Eliminar(Partida.PartidaId);
+        if (eliminado)
+        {
+            toastService.ShowSuccess("Partida eliminada correctamente");
+            navigationManager.NavigateTo("/Partidas/Index");
+        }
+        else
+        {
+            toastService.ShowError("No se pudo eliminar la partida");
+        }
+        MostrarEliminar = false;
+    }
+}
