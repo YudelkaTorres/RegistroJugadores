@@ -20,16 +20,18 @@
                         <option value="0" disabled selected>Seleccione Jugador X</option>
                         @foreach (var jugador in ListaJugadores)
                         {
-                            <option value="@jugador.JugadorId">@jugador.Nombres</option>
+                            <option value="@jugador.JugadorId" disabled ="@(jugador.JugadorId == Partida.Jugador2Id)">
+                                @jugador.Nombres
+                             </option>
                         }
                     </InputSelect>
                 </div>
 
                 <!-- Selección Jugador O -->
-                <div class="col-md mb-3">
+                <div class="mb-3">
                     <label><strong>Jugador O:</strong></label>
-                    <InputSelect class="form-select" @bind-Value="Partida.Jugador2Id">
-                        <option value="0" disabled selected>Seleccione Jugador O</option>
+                    <InputSelect class="form-select" @bind-Value="Partida.Jugador2Id" @onchange="OnJugador2Changed">
+                        <option value="0" disabled selected> Seleccione Jugador O</option>
                         @foreach (var jugador in ListaJugadores)
                         {
                             <option value="@jugador.JugadorId" disabled="@(jugador.JugadorId == Partida.Jugador1Id)">
@@ -38,11 +40,12 @@
                         }
                     </InputSelect>
                 </div>
-                <button class="btn btn-success btn-lg mt-4"
-                        disabled="@(Partida.Jugador1Id == 0)"
-                        @onclick="StartGame">
-                    Iniciar Partida
-                </button>
+                <div class="text-center mt-3">
+                    <button class="btn btn-success btn-lg" @onclick="StartGame"
+                            disabled="@(Partida.Jugador1Id == 0 || Partida.Jugador2Id == 0 || Partida.Jugador1Id == Partida.Jugador2Id)">
+                        Iniciar Partida
+                    </button>
+                </div>
             </div>
         }
         else
@@ -73,9 +76,13 @@
 
 @code {
     private enum PlayerType { X, O }
-    private Partidas Partida { get; set; } = new Partidas();
+    private Partidas Partida { get; set; } = new Partidas()
+        {
+            Jugador1Id = 0,
+            Jugador2Id = 0
+        };
     public int JugadorXId { get; set; }
-    public int? JugadorOId { get; set; }
+    public int JugadorOId { get; set; }
     private bool gameStarted;
     private PlayerType?[] board = new PlayerType?[9];
     private PlayerType _currentPlayerType = PlayerType.X;
@@ -131,7 +138,7 @@
         }
         else
         {
-            // No hay partida activa → selección
+            // No hay partida activa
             gameStarted = false;
             board = new PlayerType?[9];
         }
@@ -139,7 +146,12 @@
 
     private void OnJugador1Changed(ChangeEventArgs e)
     {
-        Partida.Jugador2Id = 0;
+
+        _currentPlayerType = PlayerType.X;
+    }
+
+    private void OnJugador2Changed(ChangeEventArgs e)
+    {
         _currentPlayerType = PlayerType.X;
     }
 
@@ -148,21 +160,22 @@
         if (player == PlayerType.X)
             return ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador1Id)?.Nombres ?? "X";
 
-            return Partida.Jugador2Id > 0
-            ? ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador2Id)?.Nombres ?? "O"
-            : "O";
+        return Partida.Jugador2Id > 0
+        ? ListaJugadores.FirstOrDefault(j => j.JugadorId == Partida.Jugador2Id)?.Nombres ?? "O"
+        : "O";
     }
 
     private async Task StartGame()
     {
-        if (Partida.Jugador1Id == 0) return; // Jugador X es obligatorio
+        if (Partida.Jugador1Id == 0 || Partida.Jugador2Id == 0 || Partida.Jugador1Id == Partida.Jugador2Id)
+            return; // Validación: dos jugadores obligatorios y distintos
 
         // Crear partida en la base de datos
         using var db = await dbFactory.CreateDbContextAsync();
         var nuevaPartida = new Partidas
         {
             Jugador1Id = Partida.Jugador1Id,
-            Jugador2Id = Partida.Jugador2Id > 0 ? Partida.Jugador2Id : null, 
+            Jugador2Id = Partida.Jugador2Id, 
             EstadoPartida = "En curso",
             TurnoJugadorId = Partida.Jugador1Id,
             EstadoTablero = "---------"
@@ -179,9 +192,6 @@
         board = new PlayerType?[9];
         winner = null;
         esEmpate = false;
-
-        JugadorXId = Partida.Jugador1Id;
-        JugadorOId = Partida.Jugador2Id;
     }
 
     private async Task HandleCellClick(int index)
@@ -218,11 +228,10 @@
         // Actualizar EstadoTablero
         partida.EstadoTablero = string.Join("", board.Select(c => c.HasValue ? (c.Value == PlayerType.X ? "X" : "O") : "-"));
 
-        // Cambiar turno solo si hay Jugador2
-        if (Partida.Jugador2Id.HasValue)
-            partida.TurnoJugadorId = _currentPlayerType == PlayerType.X ? Partida.Jugador2Id.Value : Partida.Jugador1Id;
-        else
-            partida.TurnoJugadorId = Partida.Jugador1Id; // Si solo hay Jugador X, siempre es él
+        // Cambiar turno 
+        partida.TurnoJugadorId = _currentPlayerType == PlayerType.X
+        ? partida.Jugador2Id.Value
+        : partida.Jugador1Id;
 
         // Revisar ganador
         winner = CheckForWinner();
@@ -259,7 +268,7 @@
             // Empates Jugador2 solo si existe
             if (Partida.Jugador2Id.HasValue)
             {
-                var jugador2 = await db.Jugadores.FindAsync(Partida.Jugador2Id.Value);
+                var jugador2 = await db.Jugadores.FindAsync(partida.Jugador2Id);
                 if (jugador2 != null) jugador2.Empates++;
             }
         }
@@ -273,7 +282,6 @@
         }
         else
         {
-            // Un solo jugador → siempre es Jugador1 (pero alternamos la marca solo para el tablero)
             _currentPlayerType = (_currentPlayerType == PlayerType.X) ? PlayerType.O : PlayerType.X;
             partida.TurnoJugadorId = Partida.Jugador1Id;
         }
@@ -306,6 +314,8 @@
         _currentPlayerType = PlayerType.X;
         winner = null;
         esEmpate = false;
+        Partida.Jugador1Id = 0;
+        Partida.Jugador2Id = 0;
     }
 
     private string GetPlayerClass(PlayerType? player)
