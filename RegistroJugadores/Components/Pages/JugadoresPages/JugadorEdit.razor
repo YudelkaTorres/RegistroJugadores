@@ -30,8 +30,8 @@
 							<ValidationMessage For="() => Jugadores.Nombres" />
 						</div>
 						<div class="col-md-6 mb-3">
-							<label for="" class="form-label fw-bold"></label>
-							<InputNumber id="" class="form-control" @bind-Value="Jugadores.Victorias" />
+							<label for="Victoria" class="form-label fw-bold">Victoria:</label>
+							<InputNumber id="victoria" class="form-control" @bind-Value="Jugadores.Victorias" />
 							<ValidationMessage For="() => Jugadores.Victorias" />
 						</div>
 					</div>
@@ -72,7 +72,7 @@ else
 					<ul class="list-group">
 						<li class="list-group-item"><strong>JugadorId:</strong> @Jugadores?.JugadorId</li>
 						<li class="list-group-item"><strong>Nombre:</strong> @Jugadores?.Nombres</li>
-						<li class="list-group-item"><strong>:</strong> @Jugadores?.Victorias</li>
+						<li class="list-group-item"><strong>Victorias:</strong> @Jugadores?.Victorias</li>
 					</ul>
 				</div>
 
